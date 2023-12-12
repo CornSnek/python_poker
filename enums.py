@@ -1,7 +1,9 @@
 import math
+import array
 import unittest
 from enum import Enum
 class Card(Enum):
+    """Card Ranks"""
     AceLow=0
     Two=1
     Three=2
@@ -16,6 +18,21 @@ class Card(Enum):
     Queen=11
     King=12
     AceHigh=13
+#A is AceLow initially
+str_to_card={
+    'A':Card.AceLow,
+    '2':Card.Two,
+    '3':Card.Three,
+    '4':Card.Four,
+    '5':Card.Five,
+    '6':Card.Six,
+    '7':Card.Seven,
+    '8':Card.Eight,
+    '9':Card.Nine,
+    'J':Card.Jack,
+    'Q':Card.Queen,
+    'K':Card.King,
+}
 class HandRank(Enum):
     HighCard=0
     Pair=1
@@ -39,8 +56,23 @@ hand_rank_values=[
     9, #A,2,3,4,5 to 9,10,J,Q,K (same suit)
     1,
 ]
-#hand_rank:HandRank -> sum of previous hand_rank_values
-def hand_rank_accumulate(hand_rank):
+def rank_num_sum(hand:list):
+    """
+    hand:List of sorted numbers descending -> Combinatorial number
+    https://en.wikipedia.org/wiki/Combinatorial_number_system
+    """
+    sum=0
+    same_number=None
+    r=1
+    for i in range(0,len(hand)):
+        back_i=len(hand)-i-1
+        if(hand[back_i]==same_number): continue
+        same_number=hand[back_i]
+        sum+=math.comb(hand[back_i],r)
+        r+=1
+    return sum
+def hand_rank_accumulate(hand_rank:HandRank):
+    """hand_rank:HandRank -> sum of previous hand_rank_values"""
     return sum(hand_rank_values[0:hand_rank.value])
 class TestHandRankValue(unittest.TestCase):
     def test_hand_rank_values_high_card(self):
