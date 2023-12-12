@@ -1,7 +1,18 @@
 import math
-import array
 import unittest
 from enum import Enum
+class Suit(Enum):
+    Club=1,
+    Heart=2,
+    Spade=3,
+    Diamond=4
+str_to_suit={
+    'C':Suit.Club,
+    'H':Suit.Heart,
+    'S':Suit.Spade,
+    'D':Suit.Diamond
+}
+suit_to_str={v:k for (k,v) in str_to_suit.items()}
 class Card(Enum):
     """Card Ranks"""
     AceLow=0
@@ -33,6 +44,8 @@ str_to_card={
     'Q':Card.Queen,
     'K':Card.King,
 }
+card_to_str={v:k for (k,v) in str_to_card.items()}
+card_to_str[Card.AceHigh]='A'
 class HandRank(Enum):
     HighCard=0
     Pair=1
@@ -56,7 +69,7 @@ hand_rank_values=[
     9, #A,2,3,4,5 to 9,10,J,Q,K (same suit)
     1,
 ]
-def rank_num_sum(hand:list):
+def rank_num_sum(hand):
     """
     hand:List of sorted numbers descending -> Combinatorial number
     https://en.wikipedia.org/wiki/Combinatorial_number_system
@@ -74,7 +87,7 @@ def rank_num_sum(hand:list):
 def hand_rank_accumulate(hand_rank:HandRank):
     """hand_rank:HandRank -> sum of previous hand_rank_values"""
     return sum(hand_rank_values[0:hand_rank.value])
-class TestHandRankValue(unittest.TestCase):
+class poker_enums_test(unittest.TestCase):
     def test_hand_rank_values_high_card(self):
         self.assertEqual(0,hand_rank_accumulate(HandRank.HighCard))
     def test_hand_rank_values_pair(self):
@@ -83,5 +96,3 @@ class TestHandRankValue(unittest.TestCase):
         self.assertEqual(hand_rank_values[HandRank.HighCard.value]+hand_rank_values[HandRank.Pair.value],hand_rank_accumulate(HandRank.TwoPair))
     def test_hand_rank_values_royal_flush(self):
         self.assertEqual(sum(hand_rank_values[0:HandRank.RoyalFlush.value]),hand_rank_accumulate(HandRank.RoyalFlush))
-if __name__ == '__main__':
-    unittest.main()
