@@ -6,6 +6,8 @@ class Suit(Enum):
     Heart=2,
     Spade=3,
     Diamond=4
+    def __repr__(self):
+        return suit_to_str[self]
 str_to_suit={
     'C':Suit.Club,
     'H':Suit.Heart,
@@ -29,6 +31,8 @@ class Card(Enum):
     Queen=11
     King=12
     AceHigh=13
+    def __repr__(self):
+        return card_to_str[self]
 #A is AceLow initially
 str_to_card={
     'A':Card.AceLow,
@@ -40,12 +44,24 @@ str_to_card={
     '7':Card.Seven,
     '8':Card.Eight,
     '9':Card.Nine,
+    'T':Card.Ten,
     'J':Card.Jack,
     'Q':Card.Queen,
     'K':Card.King,
 }
 card_to_str={v:k for (k,v) in str_to_card.items()}
 card_to_str[Card.AceHigh]='A'
+def generate_card(string:str,is_ace_high=False) -> (Card,Suit):
+    """
+    Format (Card)(Suit) using str_to_suit and str_to_card dictionaries
+    Example: TC outputs (Card.Ten,Suit.Club)
+    
+    This is used for testing purposes.
+    """
+    card=str_to_card[string[0]]
+    if is_ace_high and card==Card.AceLow:
+        card=Card.AceHigh
+    return (card,str_to_suit[string[1]])
 class HandRank(Enum):
     HighCard=0
     Pair=1
@@ -96,3 +112,9 @@ class poker_enums_test(unittest.TestCase):
         self.assertEqual(hand_rank_values[HandRank.HighCard.value]+hand_rank_values[HandRank.Pair.value],hand_rank_accumulate(HandRank.TwoPair))
     def test_hand_rank_values_royal_flush(self):
         self.assertEqual(sum(hand_rank_values[0:HandRank.RoyalFlush.value]),hand_rank_accumulate(HandRank.RoyalFlush))
+    def test_generate_card(self):
+        self.assertEqual(generate_card("9S"),(Card.Nine,Suit.Spade))
+    def test_generate_card_ace_low(self):
+        self.assertEqual(generate_card("AH"),(Card.AceLow,Suit.Heart))
+    def test_generate_card_ace_high(self):
+        self.assertEqual(generate_card("AC",True),(Card.AceHigh,Suit.Club))

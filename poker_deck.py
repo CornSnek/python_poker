@@ -19,7 +19,10 @@ class Deck:
     def put_cards(self,hand):
         self.deck.extend(hand)
         del hand[:]
-    def check_if_cards_unique(self):
+    def as_sorted_values(hand):
+        return sorted([h[0].value for h in hand],reverse=True)
+    def check_if_deck_unique(self):
+        """This is mostly for error-checking if duplcate cards have accidentally been added back"""
         check_set=set()
         return not any(i in check_set or check_set.add(i) for i in self.deck)
 class poker_deck_test(unittest.TestCase):
@@ -31,8 +34,8 @@ class poker_deck_test(unittest.TestCase):
                 self.assertNotEqual(d,h)
     def test_cards_whole_deck_should_be_unique(self):
         deck=Deck()
-        self.assertEqual(deck.check_if_cards_unique(),True)
+        self.assertEqual(deck.check_if_deck_unique(),True)
     def test_cards_duplicates_should_not_be_unique(self):
         deck=Deck()
         deck.deck.append((poker_enums.Card.AceLow,poker_enums.Suit.Diamond))
-        self.assertEqual(deck.check_if_cards_unique(),False)
+        self.assertEqual(deck.check_if_deck_unique(),False)
