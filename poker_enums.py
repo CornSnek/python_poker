@@ -73,6 +73,8 @@ class HandRank(Enum):
     FourOfAKind=7
     StraightFlush=8
     RoyalFlush=9
+def max_hand_rank(r1:HandRank,r2:HandRank):
+    return r1 if r1.value>r2.value else r2
 hand_rank_values=[
     math.comb(13,5),
     math.comb(13,4),
@@ -118,3 +120,6 @@ class poker_enums_test(unittest.TestCase):
         self.assertEqual(generate_card("AH"),(Card.AceLow,Suit.Heart))
     def test_generate_card_ace_high(self):
         self.assertEqual(generate_card("AC",True),(Card.AceHigh,Suit.Club))
+    def test_max_hand_rank(self):
+        self.assertEqual(max_hand_rank(HandRank.HighCard,HandRank.Pair),HandRank.Pair)
+        self.assertEqual(max_hand_rank(HandRank.RoyalFlush,HandRank.StraightFlush),HandRank.RoyalFlush)
