@@ -1,18 +1,39 @@
 import poker_deck
 import poker_enums
+class RankCmp:
+    def __init__(self,hand_rank:poker_enums.HandRank,card_rank:list[int]):
+        self.hand_rank=hand_rank
+        self.card_rank=card_rank
+    def as_tuple(self):
+        return (self.hand_rank,self.card_rank.copy())
+    def __eq__(self,other):
+        return self.hand_rank.value==other.hand_rank.value and self.card_rank==other.card_rank
+    def __gt__(self,other):
+        if(self.hand_rank.value>other.hand_rank.value):
+            return True
+        elif(self.hand_rank.value<other.hand_rank.value):
+            return False
+        else:
+            return self.card_rank>other.card_rank
+    def __lt__(self,other):
+        if(self.hand_rank.value<other.hand_rank.value):
+            return True
+        elif(self.hand_rank.value>other.hand_rank.value):
+            return False
+        else:
+            return self.card_rank<other.card_rank
 class Hand:
     def __init__(self):
         self.hand:list[(poker_enums.Card,poker_enums.Suit)]=[]
     def draw_from_deck(self,deck:poker_deck.Deck):
         assert(len(self.hand)!=5)
         self.hand=deck.get_cards(5)
-    
     def put_back_hand(self,deck:poker_deck.Deck):
         deck.put_back_cards(self.hand)
-    def get_hand_rank(self,ace_high:bool=False):
+    def get_hand_rank(self,ace_high:bool=False)->RankCmp:
         assert(len(self.hand)==5)
         if ace_high:
-            use_hand=[c for c in self.hand]
+            use_hand=self.hand.copy()
             for i in range(len(use_hand)):
                 if use_hand[i][0]==poker_enums.Card.AceLow:
                     use_hand[i]=(poker_enums.Card.AceHigh,use_hand[i][1])
@@ -57,7 +78,7 @@ class Hand:
         else:
             rank=poker_enums.HandRank.HighCard
             number_ranks=sorted_cv
-        return (rank,number_ranks)
+        return RankCmp(rank,number_ranks)
     def get_windows(sorted_cv):
         """
         Returns (highest_window_max,highest_window_card,lowest_window_card)
@@ -86,4 +107,17 @@ class Hand:
     def check_same_suit(hand):
         first_suit=hand[1][1]
         return all(c[1]==first_suit for c in hand)
-
+hand1=Hand()
+hand2=Hand()
+deck=poker_deck.Deck()
+deck.shuffle()
+hand1.draw_from_deck(deck)
+hand2.draw_from_deck(deck)
+rc1=hand1.get_hand_rank()
+rc2=hand2.get_hand_rank()
+print("rc1",rc1.as_tuple())
+print("rc2",rc2.as_tuple())
+print("rc1==rc1?",rc1==rc1)
+print("rc1==rc2?",rc1==rc2)
+print("rc1>rc2?",rc1>rc2)
+print("rc1<rc2?",rc1<rc2)
