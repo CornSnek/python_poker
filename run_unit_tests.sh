@@ -1,1 +1,1 @@
-python -m unittest poker_*.py main.py
+python -m unittest poker_*.py main_test.py

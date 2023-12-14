@@ -16,7 +16,7 @@ class Deck:
         return_cards=self.deck[-much:]
         del self.deck[-much:]
         return return_cards
-    def put_cards(self,hand):
+    def put_back_cards(self,hand):
         self.deck.extend(hand)
         del hand[:]
     def as_sorted_values(hand):

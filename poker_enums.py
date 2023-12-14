@@ -75,45 +75,7 @@ class HandRank(Enum):
     RoyalFlush=9
 def max_hand_rank(r1:HandRank,r2:HandRank):
     return r1 if r1.value>r2.value else r2
-hand_rank_values=[
-    math.comb(13,5),
-    math.comb(13,4),
-    math.comb(13,3),
-    math.comb(13,3),
-    10, #A,2,3,4,5 to 10,J,Q,K,A
-    math.comb(13,5),
-    math.comb(13,2),
-    math.comb(13,2),
-    9, #A,2,3,4,5 to 9,10,J,Q,K (same suit)
-    1,
-]
-def rank_num_sum(hand):
-    """
-    hand:List of sorted numbers descending -> Combinatorial number
-    https://en.wikipedia.org/wiki/Combinatorial_number_system
-    """
-    sum=0
-    same_number=None
-    r=1
-    for i in range(0,len(hand)):
-        back_i=len(hand)-i-1
-        if(hand[back_i]==same_number): continue
-        same_number=hand[back_i]
-        sum+=math.comb(hand[back_i],r)
-        r+=1
-    return sum
-def hand_rank_accumulate(hand_rank:HandRank):
-    """hand_rank:HandRank -> sum of previous hand_rank_values"""
-    return sum(hand_rank_values[0:hand_rank.value])
 class poker_enums_test(unittest.TestCase):
-    def test_hand_rank_values_high_card(self):
-        self.assertEqual(0,hand_rank_accumulate(HandRank.HighCard))
-    def test_hand_rank_values_pair(self):
-        self.assertEqual(hand_rank_values[HandRank.HighCard.value],hand_rank_accumulate(HandRank.Pair))
-    def test_hand_rank_values_two_pair(self):
-        self.assertEqual(hand_rank_values[HandRank.HighCard.value]+hand_rank_values[HandRank.Pair.value],hand_rank_accumulate(HandRank.TwoPair))
-    def test_hand_rank_values_royal_flush(self):
-        self.assertEqual(sum(hand_rank_values[0:HandRank.RoyalFlush.value]),hand_rank_accumulate(HandRank.RoyalFlush))
     def test_generate_card(self):
         self.assertEqual(generate_card("9S"),(Card.Nine,Suit.Spade))
     def test_generate_card_ace_low(self):
