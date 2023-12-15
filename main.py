@@ -21,17 +21,19 @@ class RankCmp:
         else: return self.card_rank<other.card_rank
 class Hand:
     def __init__(self):
-        self.hand:list[CardTuple]=[]
+        self.__deck_hand:list[CardTuple]=[]
+    def set_deck_hand(self,cards:list[CardTuple]):
+        self.__deck_hand=cards
     def draw_from_deck(self,deck:poker_deck.Deck):
-        assert(len(self.hand)!=5)
-        self.hand=deck.get_cards(5)
+        assert(len(self.__deck_hand)!=5)
+        self.__deck_hand=deck.get_cards(5)
     def put_back_hand(self,deck:poker_deck.Deck):
-        deck.put_back_cards(self.hand)
+        deck.put_back_cards(self.__deck_hand)
     def get_hand_rank(self)->RankCmp:
         return max(self.__get_hand_rank(),self.__get_hand_rank(ace_high=True)) #Check both hands for maximum if Ace is low/high.
     def __get_hand_rank(self,ace_high:bool=False)->RankCmp:
-        assert(len(self.hand)==5)
-        use_hand=self.hand.copy() #Dont mutate hand
+        assert(len(self.__deck_hand)==5)
+        use_hand=self.__deck_hand.copy() #Dont mutate hand
         if ace_high:
             for i in range(len(use_hand)):
                 if use_hand[i][0]==poker_enums.Card.AceLow:
@@ -132,16 +134,10 @@ if __name__ == '__main__':
         print(f"Player {player_i+1} will go first")
         while(True):
             if(player_i==0):
-                p_hand=players_hands[0]
                 p_ranking=players_rankings[0]
-                hand_print='|'.join([ f"{c.as_game_str()}{s.as_game_str()}" for c,s in p_hand.hand ])
-                print(f"Your turn: Your current hand: {hand_print}\nRanking: {p_ranking.hand_rank.as_str_name()}\n")
-                input()
+                hand_print=','.join([ f"[{c.as_game_str()}{s.as_game_str()}]" for c,s in p_ranking.cards ])
+                print(f"It's your turn:\nYour current hand: {hand_print}\nCurrent Hand Ranking: {p_ranking.hand_rank.as_str_name()}\n")
+                input("What will you do?\nTODO >> ")
             else:
                 print(f"Player {player_i+1}'s turn: ")
             player_i=next_player(player_i)
-
-        for hand,rankings in zip(players_hands,players_rankings):
-            print(hand.hand,rankings.as_tuple())    
-        print("TODO: Add functionality")
-        break
