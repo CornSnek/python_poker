@@ -104,40 +104,44 @@ class Hand:
     def check_same_suit(hand):
         first_suit=hand[1][1]
         return all(c[1]==first_suit for c in hand)
-while True:
-    computers_str=input("You are playing a simulation of Draw Poker.\nHow many computer players will play (1-3)? 0 to exit >> ")
-    if(len(computers_str)==1 and '0'<=computers_str<='3'):
-        if(computers_str=='0'): exit()
-        computers_len=int(computers_str)
-        break
-    else:
-        print(f"Invalid string '{computers_str}'")
-players_hands=[Hand() for _ in range(computers_len+1)]
-players_rankings:list[RankCmp|None]=[None for _ in range(computers_len+1)]
-num_players=computers_len+1
 
-game_loop=True
-def next_player(player_i:int)->int:
-    return (player_i+1)%num_players
-while game_loop:
-    all_bets_placed=False
-    deck=poker_deck.Deck()
-    deck.shuffle()
-    for i,hand in enumerate(players_hands):
-        hand.draw_from_deck(deck)
-        players_rankings[i]=hand.get_hand_rank()
-    player_i=random.randint(0,computers_len)
-    print(f"Player {player_i+1} will go first")
-    while(True):
-        if(player_i==0):
-            p_hand=players_hands[0]
-            p_ranking=players_rankings[0]
-            input(f"Your turn: Hand: {p_hand.hand}\nRanking: {repr(p_ranking.hand_rank)}\n")
+if __name__ == '__main__':
+    while True:
+        computers_str=input("You are playing a simulation of Draw Poker.\nHow many computer players will play (1-3)? 0 to exit >> ")
+        if(len(computers_str)==1 and '0'<=computers_str<='3'):
+            if(computers_str=='0'): exit()
+            computers_len=int(computers_str)
+            break
         else:
-            print(f"Player {player_i+1}'s turn: ")
-        player_i=next_player(player_i)
-    
-    for hand,rankings in zip(players_hands,players_rankings):
-        print(hand.hand,rankings.as_tuple())    
-    print("TODO: Add functionality")
-    break
+            print(f"Invalid string '{computers_str}'")
+    players_hands=[Hand() for _ in range(computers_len+1)]
+    players_rankings:list[RankCmp|None]=[None for _ in range(computers_len+1)]
+    num_players=computers_len+1
+
+    game_loop=True
+    def next_player(player_i:int)->int:
+        return (player_i+1)%num_players
+    while game_loop:
+        all_bets_placed=False
+        deck=poker_deck.Deck()
+        deck.shuffle()
+        for i,hand in enumerate(players_hands):
+            hand.draw_from_deck(deck)
+            players_rankings[i]=hand.get_hand_rank()
+        player_i=random.randint(0,computers_len)
+        print(f"Player {player_i+1} will go first")
+        while(True):
+            if(player_i==0):
+                p_hand=players_hands[0]
+                p_ranking=players_rankings[0]
+                hand_print='|'.join([ f"{c.as_game_str()}{s.as_game_str()}" for c,s in p_hand.hand ])
+                print(f"Your turn: Your current hand: {hand_print}\nRanking: {p_ranking.hand_rank.as_str_name()}\n")
+                input()
+            else:
+                print(f"Player {player_i+1}'s turn: ")
+            player_i=next_player(player_i)
+
+        for hand,rankings in zip(players_hands,players_rankings):
+            print(hand.hand,rankings.as_tuple())    
+        print("TODO: Add functionality")
+        break

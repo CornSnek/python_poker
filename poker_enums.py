@@ -1,18 +1,26 @@
 import math
 import unittest
+import utils
 from enum import Enum
 class Suit(Enum):
-    Club=1,
-    Heart=2,
-    Spade=3,
-    Diamond=4
-    def __repr__(self):
-        return suit_to_str[self]
+    Club=0,
+    Heart=1,
+    Spade=2,
+    Diamond=3
+    def as_game_str(self):
+        return suit_to_game_str[self]
 str_to_suit={
     'C':Suit.Club,
     'H':Suit.Heart,
     'S':Suit.Spade,
     'D':Suit.Diamond
+}
+ts=utils.add_escape_seq
+suit_to_game_str={
+    Suit.Club:ts('30;1m','♣'),
+    Suit.Heart:ts('31;1m','♥'),
+    Suit.Spade:ts('30;1m','♠'),
+    Suit.Diamond:ts('31;1m','♦'),
 }
 suit_to_str={v:k for (k,v) in str_to_suit.items()}
 class Card(Enum):
@@ -31,8 +39,12 @@ class Card(Enum):
     Queen=11
     King=12
     AceHigh=13
-    def __repr__(self):
-        return card_to_str[self]
+    def as_game_str(self):
+        if self==Card.AceLow: return "A (Low)"
+        elif self==Card.AceHigh: return "A (High)"
+        elif self==Card.Ten: return '10'
+        else: return card_to_str[self]
+#card_to_game_str={k:v for k,v in Card}
 #A is AceLow initially
 str_to_card={
     'A':Card.AceLow,
@@ -84,7 +96,7 @@ class HandRank(Enum):
     FourOfAKind=7
     StraightFlush=8
     RoyalFlush=9
-    def __repr__(self):
+    def as_str_name(self):
         return pascal_case_with_space(self.name)
 def max_hand_rank(r1:HandRank,r2:HandRank):
     return r1 if r1.value>r2.value else r2
