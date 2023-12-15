@@ -62,6 +62,17 @@ def generate_card(string:str,is_ace_high=False) -> (Card,Suit):
     if is_ace_high and card==Card.AceLow:
         card=Card.AceHigh
     return (card,str_to_suit[string[1]])
+def pascal_case_with_space(str:str):
+    """Get slices of capital words to then place spaces between them"""
+    slices:[(int,int)]=[]
+    slice_begin:int=0
+    for i,ch in enumerate(str):
+        if ch.isupper():
+            slices.append((slice_begin,i))
+            slice_begin=i
+    if len(slices)==0 or slices[-1][0]!=len(str)-1:
+        slices.append((slice_begin,len(str)))
+    return " ".join([str[sl[0]:sl[1]] for sl in slices]).strip()
 class HandRank(Enum):
     HighCard=0
     Pair=1
@@ -73,6 +84,8 @@ class HandRank(Enum):
     FourOfAKind=7
     StraightFlush=8
     RoyalFlush=9
+    def __repr__(self):
+        return pascal_case_with_space(self.name)
 def max_hand_rank(r1:HandRank,r2:HandRank):
     return r1 if r1.value>r2.value else r2
 class poker_enums_test(unittest.TestCase):

@@ -113,17 +113,31 @@ while True:
     else:
         print(f"Invalid string '{computers_str}'")
 players_hands=[Hand() for _ in range(computers_len+1)]
+players_rankings:list[RankCmp|None]=[None for _ in range(computers_len+1)]
 num_players=computers_len+1
 
 game_loop=True
+def next_player(player_i:int)->int:
+    return (player_i+1)%num_players
 while game_loop:
+    all_bets_placed=False
     deck=poker_deck.Deck()
     deck.shuffle()
-    for hand in players_hands:
+    for i,hand in enumerate(players_hands):
         hand.draw_from_deck(deck)
+        players_rankings[i]=hand.get_hand_rank()
     player_i=random.randint(0,computers_len)
     print(f"Player {player_i+1} will go first")
-    for hand in players_hands:
-        print(hand.hand)    
+    while(True):
+        if(player_i==0):
+            p_hand=players_hands[0]
+            p_ranking=players_rankings[0]
+            input(f"Your turn: Hand: {p_hand.hand}\nRanking: {repr(p_ranking.hand_rank)}\n")
+        else:
+            print(f"Player {player_i+1}'s turn: ")
+        player_i=next_player(player_i)
+    
+    for hand,rankings in zip(players_hands,players_rankings):
+        print(hand.hand,rankings.as_tuple())    
     print("TODO: Add functionality")
     break
