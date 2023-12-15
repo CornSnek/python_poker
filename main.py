@@ -1,30 +1,26 @@
 import poker_deck
 import poker_enums
+CardTuple=(poker_enums.Card,poker_enums.Suit)
 class RankCmp:
-    def __init__(self,hand_rank:poker_enums.HandRank,card_rank:list[int]):
+    def __init__(self,hand_rank:poker_enums.HandRank,card_rank:list[int],cards:list[CardTuple]):
         self.hand_rank=hand_rank
         self.card_rank=card_rank
+        self.cards=cards
     def as_tuple(self):
-        return (self.hand_rank,self.card_rank.copy())
+        return (self.hand_rank,self.card_rank,self.cards)
     def __eq__(self,other):
         return self.hand_rank.value==other.hand_rank.value and self.card_rank==other.card_rank
     def __gt__(self,other):
-        if(self.hand_rank.value>other.hand_rank.value):
-            return True
-        elif(self.hand_rank.value<other.hand_rank.value):
-            return False
-        else:
-            return self.card_rank>other.card_rank
+        if(self.hand_rank.value>other.hand_rank.value): return True
+        elif(self.hand_rank.value<other.hand_rank.value): return False
+        else: return self.card_rank>other.card_rank
     def __lt__(self,other):
-        if(self.hand_rank.value<other.hand_rank.value):
-            return True
-        elif(self.hand_rank.value>other.hand_rank.value):
-            return False
-        else:
-            return self.card_rank<other.card_rank
+        if(self.hand_rank.value<other.hand_rank.value): return True
+        elif(self.hand_rank.value>other.hand_rank.value): return False
+        else: return self.card_rank<other.card_rank
 class Hand:
     def __init__(self):
-        self.hand:list[(poker_enums.Card,poker_enums.Suit)]=[]
+        self.hand:list[CardTuple]=[]
     def draw_from_deck(self,deck:poker_deck.Deck):
         assert(len(self.hand)!=5)
         self.hand=deck.get_cards(5)
@@ -32,13 +28,11 @@ class Hand:
         deck.put_back_cards(self.hand)
     def get_hand_rank(self,ace_high:bool=False)->RankCmp:
         assert(len(self.hand)==5)
+        use_hand=self.hand.copy() #Dont mutate hand
         if ace_high:
-            use_hand=self.hand.copy()
             for i in range(len(use_hand)):
                 if use_hand[i][0]==poker_enums.Card.AceLow:
                     use_hand[i]=(poker_enums.Card.AceHigh,use_hand[i][1])
-        else:
-            use_hand=self.hand
         sorted_cv=poker_deck.Deck.as_sorted_values(use_hand)
         is_straight=Hand.check_straight(sorted_cv)
         is_flush=Hand.check_same_suit(use_hand)
@@ -78,7 +72,7 @@ class Hand:
         else:
             rank=poker_enums.HandRank.HighCard
             number_ranks=sorted_cv
-        return RankCmp(rank,number_ranks)
+        return RankCmp(rank,number_ranks,use_hand)
     def get_windows(sorted_cv):
         """
         Returns (highest_window_max,highest_window_card,lowest_window_card)
@@ -121,3 +115,4 @@ print("rc1==rc1?",rc1==rc1)
 print("rc1==rc2?",rc1==rc2)
 print("rc1>rc2?",rc1>rc2)
 print("rc1<rc2?",rc1<rc2)
+print("Highest rank",max(rc1,rc2).as_tuple())
