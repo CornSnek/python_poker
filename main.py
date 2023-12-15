@@ -1,5 +1,6 @@
 import poker_deck
 import poker_enums
+import random
 CardTuple=(poker_enums.Card,poker_enums.Suit)
 class RankCmp:
     def __init__(self,hand_rank:poker_enums.HandRank,card_rank:list[int],cards:list[CardTuple]):
@@ -27,7 +28,7 @@ class Hand:
     def put_back_hand(self,deck:poker_deck.Deck):
         deck.put_back_cards(self.hand)
     def get_hand_rank(self)->RankCmp:
-        return max(self.__get_hand_rank(),self.__get_hand_rank(ace_high=True)) #Check both hands for Ace low/high.
+        return max(self.__get_hand_rank(),self.__get_hand_rank(ace_high=True)) #Check both hands for maximum if Ace is low/high.
     def __get_hand_rank(self,ace_high:bool=False)->RankCmp:
         assert(len(self.hand)==5)
         use_hand=self.hand.copy() #Dont mutate hand
@@ -103,18 +104,26 @@ class Hand:
     def check_same_suit(hand):
         first_suit=hand[1][1]
         return all(c[1]==first_suit for c in hand)
-hand1=Hand()
-hand2=Hand()
-deck=poker_deck.Deck()
-deck.shuffle()
-hand1.draw_from_deck(deck)
-hand2.draw_from_deck(deck)
-rc1=hand1.get_hand_rank()
-rc2=hand2.get_hand_rank()
-print("rc1",rc1.as_tuple())
-print("rc2",rc2.as_tuple())
-print("rc1==rc1?",rc1==rc1)
-print("rc1==rc2?",rc1==rc2)
-print("rc1>rc2?",rc1>rc2)
-print("rc1<rc2?",rc1<rc2)
-print("Highest rank",max(rc1,rc2).as_tuple())
+while True:
+    computers_str=input("You are playing a simulation of Draw Poker.\nHow many computer players will play (1-3)? 0 to exit >> ")
+    if(len(computers_str)==1 and '0'<=computers_str<='3'):
+        if(computers_str=='0'): exit()
+        computers_len=int(computers_str)
+        break
+    else:
+        print(f"Invalid string '{computers_str}'")
+players_hands=[Hand() for _ in range(computers_len+1)]
+num_players=computers_len+1
+
+game_loop=True
+while game_loop:
+    deck=poker_deck.Deck()
+    deck.shuffle()
+    for hand in players_hands:
+        hand.draw_from_deck(deck)
+    player_i=random.randint(0,computers_len)
+    print(f"Player {player_i+1} will go first")
+    for hand in players_hands:
+        print(hand.hand)    
+    print("TODO: Add functionality")
+    break
