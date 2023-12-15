@@ -1,12 +1,19 @@
 import poker_deck
 import poker_enums
+from poker_enums import HandRank,Card
 import random
 CardTuple=(poker_enums.Card,poker_enums.Suit)
 class RankCmp:
-    def __init__(self,hand_rank:poker_enums.HandRank,card_rank:list[int],cards:list[CardTuple]):
+    def __init__(self,hand_rank:HandRank,card_rank:list[int],cards:list[CardTuple]):
         self.hand_rank=hand_rank
         self.card_rank=card_rank
         self.cards=cards
+    def description(self)->str:
+        if(self.hand_rank==HandRank.HighCard):
+            other_cards_str="following "+", ".join(Card(v).as_game_str() for v in self.card_rank[1:])
+            return f"{self.hand_rank.as_str_name()}:{Card(self.card_rank[0]).as_game_str()} as highest, following: {other_cards_str}."
+        else:
+            return f"{self.hand_rank.as_str_name()} TODO: Add card description for this rank"
     def as_tuple(self):
         return (self.hand_rank,self.card_rank,self.cards)
     def __eq__(self,other):
@@ -22,7 +29,8 @@ class RankCmp:
 class Hand:
     def __init__(self):
         self.__deck_hand:list[CardTuple]=[]
-    def set_deck_hand(self,cards:list[CardTuple]):
+    def _set_deck_hand(self,cards:list[CardTuple]):
+        """Used for testing purposes"""
         self.__deck_hand=cards
     def draw_from_deck(self,deck:poker_deck.Deck):
         assert(len(self.__deck_hand)!=5)
@@ -44,38 +52,38 @@ class Hand:
         highest_window_max,high_window,low_window=Hand.get_windows(sorted_cv)
         if is_straight and is_flush:
             if(sorted_cv!=[13,12,11,10,9]):
-                rank=poker_enums.HandRank.StraightFlush
+                rank=HandRank.StraightFlush
             else:
-                rank=poker_enums.HandRank.RoyalFlush
+                rank=HandRank.RoyalFlush
             number_ranks=[sorted_cv[0]] #Gets number values from highest/lowest rankings
         elif highest_window_max==4:
-            rank=poker_enums.HandRank.FourOfAKind
+            rank=HandRank.FourOfAKind
             number_ranks=[high_window]
             number_ranks.extend([e for e in sorted_cv if e not in number_ranks]) #Add the other numbers high/low as they're next in checking ranking
         elif highest_window_max==3 and low_window!=None:
-            rank=poker_enums.HandRank.FullHouse
+            rank=HandRank.FullHouse
             number_ranks=[high_window,low_window]
         elif is_flush:
-            rank=poker_enums.HandRank.Flush
+            rank=HandRank.Flush
             number_ranks=sorted_cv
         elif is_straight:
-            rank=poker_enums.HandRank.Straight
+            rank=HandRank.Straight
             number_ranks=[sorted_cv[0]]
         elif highest_window_max==3:
-            rank=poker_enums.HandRank.ThreeOfAKind
+            rank=HandRank.ThreeOfAKind
             number_ranks=[high_window]
             number_ranks.extend([e for e in sorted_cv if e not in number_ranks])
         elif highest_window_max==2:
             if low_window!=None:
-                rank=poker_enums.HandRank.TwoPair
+                rank=HandRank.TwoPair
                 number_ranks=[high_window,low_window]
                 number_ranks.extend([e for e in sorted_cv if e not in number_ranks])
             else:
-                rank=poker_enums.HandRank.Pair
+                rank=HandRank.Pair
                 number_ranks=[high_window]
                 number_ranks.extend([e for e in sorted_cv if e not in number_ranks])
         else:
-            rank=poker_enums.HandRank.HighCard
+            rank=HandRank.HighCard
             number_ranks=sorted_cv
         return RankCmp(rank,number_ranks,use_hand)
     def get_windows(sorted_cv):
@@ -136,7 +144,7 @@ if __name__ == '__main__':
             if(player_i==0):
                 p_ranking=players_rankings[0]
                 hand_print=','.join([ f"[{c.as_game_str()}{s.as_game_str()}]" for c,s in p_ranking.cards ])
-                print(f"It's your turn:\nYour current hand: {hand_print}\nCurrent Hand Ranking: {p_ranking.hand_rank.as_str_name()}\n")
+                print(f"It's your turn:\nYour current hand: {hand_print}\nCurrent Hand Ranking: {p_ranking.description()}\n")
                 input("What will you do?\nTODO >> ")
             else:
                 print(f"Player {player_i+1}'s turn: ")
