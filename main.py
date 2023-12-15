@@ -7,13 +7,24 @@ class RankCmp:
     def __init__(self,hand_rank:HandRank,card_rank:list[int],cards:list[CardTuple]):
         self.hand_rank=hand_rank
         self.card_rank=card_rank
-        self.cards=cards
+        self.cards:list[CardTuple]=cards
+    def other_cards(self,begin:int)->str:
+        return "following "+", ".join(Card(v).as_game_str() for v in self.card_rank[begin:])
     def description(self)->str:
-        if(self.hand_rank==HandRank.HighCard):
-            other_cards_str="following "+", ".join(Card(v).as_game_str() for v in self.card_rank[1:])
-            return f"{self.hand_rank.as_str_name()}:{Card(self.card_rank[0]).as_game_str()} as highest, following: {other_cards_str}."
-        else:
-            return f"{self.hand_rank.as_str_name()} TODO: Add card description for this rank"
+        if(self.hand_rank==HandRank.HighCard or self.hand_rank==HandRank.Straight):
+            return f"{self.hand_rank.as_str_name()}: {Card(self.card_rank[0]).as_game_str()} as the highest, {self.other_cards(1)}"
+        elif(self.hand_rank==HandRank.Pair):
+            return f"{self.hand_rank.as_str_name()}: {Card(self.card_rank[0]).as_game_str()} as the pair, {self.other_cards(1)}"
+        elif(self.hand_rank==HandRank.TwoPair):
+            return f"{self.hand_rank.as_str_name()}: {Card(self.card_rank[0]).as_game_str()} as the highest pair, {Card(self.card_rank[1]).as_game_str()} as the lowest pair, {self.other_cards(2)}"
+        elif(self.hand_rank==HandRank.ThreeOfAKind):
+            return f"{self.hand_rank.as_str_name()}: {Card(self.card_rank[0]).as_game_str()} as the triplet, {self.other_cards(1)}"
+        elif(self.hand_rank==HandRank.Flush or self.hand_rank==HandRank.StraightFlush or self.hand_rank==HandRank.RoyalFlush):
+            return f"{self.hand_rank.as_str_name()}: {Card(self.card_rank[0]).as_game_str()} as the highest, {self.other_cards(1)}, all {poker_enums.suit_to_game_str[self.cards[0][1]]}"
+        elif(self.hand_rank==HandRank.FullHouse):
+            return f"{self.hand_rank.as_str_name()}: {Card(self.card_rank[0]).as_game_str()} as the triplet, {Card(self.card_rank[1]).as_game_str()} as the lowest pair, {self.other_cards(2)}"
+        elif(self.hand_rank==HandRank.FourOfAKind):
+            return f"{self.hand_rank.as_str_name()}: {Card(self.card_rank[0]).as_game_str()} as the quartet, {self.other_cards(1)}"
     def as_tuple(self):
         return (self.hand_rank,self.card_rank,self.cards)
     def __eq__(self,other):
