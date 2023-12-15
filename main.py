@@ -26,7 +26,9 @@ class Hand:
         self.hand=deck.get_cards(5)
     def put_back_hand(self,deck:poker_deck.Deck):
         deck.put_back_cards(self.hand)
-    def get_hand_rank(self,ace_high:bool=False)->RankCmp:
+    def get_hand_rank(self)->RankCmp:
+        return max(self.__get_hand_rank(),self.__get_hand_rank(ace_high=True)) #Check both hands for Ace low/high.
+    def __get_hand_rank(self,ace_high:bool=False)->RankCmp:
         assert(len(self.hand)==5)
         use_hand=self.hand.copy() #Dont mutate hand
         if ace_high:

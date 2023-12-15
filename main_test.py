@@ -62,4 +62,4 @@ class poker_deck_test(unittest.TestCase):
         pgc=poker_enums.generate_card
         hand=Hand()
         hand.hand=[pgc("TD"), pgc("JD"), pgc("QD"), pgc("KD"), pgc("AD")]
-        self.assertEqual(hand.get_hand_rank(ace_high=True).hand_rank,poker_enums.HandRank.RoyalFlush)
+        self.assertEqual(hand.get_hand_rank().hand_rank,poker_enums.HandRank.RoyalFlush)
