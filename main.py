@@ -138,7 +138,7 @@ class GameLoop:
     def initialize_new_game_loop(self):
         self.players_rankings:list[RankCmp|None]=[None for _ in range(computers_len+1)]
         self.players_option:list[ActionType|None]=[None for _ in range(computers_len+1)]
-        self.winning_players:list[int]=[] #list[int] as they're may be more than 1 player
+        self.winning_players:list[int]=[] #list[int] as there may be more than 1 player
         self.winning_reason:str=""
         self.last_option=ActionType.Check
         self.deck.shuffle()
