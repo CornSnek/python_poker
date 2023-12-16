@@ -298,7 +298,7 @@ class GameLoop:
                     if f==2 or f==3:
                         i_list_append.extend(i_list)
                         append_count+=1
-                if(append_count==2): #Computer player tries to keep Full House, or replaces 1 card from a pair to get a full house.
+                if(append_count==2): #Computer player tries to keep Full House, or replaces 1 card from a two pair to get a full house.
                     if len(i_list_append)==0: continue
                     print(f"Player {computer_p+1} has replaced {5-len(i_list_append)} card(s)")
                     self.players_hands[computer_p].replace_hand(self.deck,[i for i in list(range(5)) if i not in i_list_append])
