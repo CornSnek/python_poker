@@ -194,6 +194,7 @@ class GameLoop:
             self.do_draw_phase()
             for p,hand in enumerate(self.players_hands): #Get new hand rankings
                 self.players_rankings[p]=hand.get_hand_rank()
+            self.last_option=ActionType.Check
             self.do_betting_phase()
             if len(self.winning_players)==0:
                 self.winning_reason="Player(s) have the highest ranking cards and did not fold"
@@ -252,6 +253,8 @@ class GameLoop:
                 if player_choice==ActionType.Raise:
                     players_ok=[False for _ in range(self.num_players)]
             players_ok[self.player_i]=True
+            if player_choice!=ActionType.Fold:
+                self.last_option=player_choice
             if(not self.get_next_player_or_phase()): break
             new_players_ok=[is_ok for po,is_ok in zip(self.players_option,players_ok) if po!=ActionType.Fold] #Check if true for non Folded players
             if(all(new_players_ok)): break 
