@@ -124,7 +124,62 @@ class Hand:
     def check_same_suit(hand):
         first_suit=hand[1][1]
         return all(c[1]==first_suit for c in hand)
-
+class GameLoop:
+    def __init__(self,computers_len):
+        self.deck=poker_deck.Deck()
+        self.players_hands=[Hand() for _ in range(computers_len+1)]
+        self.players_rankings:list[RankCmp|None]=[Hand() for _ in range(computers_len+1)]
+        self.players_has_folded:list[bool]=[False for _ in range(computers_len+1)]
+        self.num_players=computers_len+1
+        self.game_loop=True
+    def next_player(self):
+        self.player_i=(self.player_i+1)%self.num_players
+    def do_game_loop(self):
+        while self.game_loop:
+            self.last_option=poker_enums.ActionType.Check
+            self.all_bets_placed=False
+            self.deck.shuffle()
+            self.player_i=random.randint(0,computers_len)
+            print(f"Player {self.player_i+1} will go first")
+            for i,hand in enumerate(self.players_hands):
+                hand.draw_from_deck(self.deck)
+                self.players_rankings[i]=hand.get_hand_rank()
+            self.do_betting_phase()
+    def do_betting_phase(self):
+        while True:
+            player_choice=None
+            if(self.player_i==0):
+                p_ranking=self.players_rankings[0]
+                hand_print=','.join([ f"[{c.as_game_str()}{s.as_game_str()}]" for c,s in p_ranking.cards ])
+                print(f"It's your turn:\nYour current hand: {hand_print}\nCurrent ranking: {p_ranking.description()}")
+                while(True):
+                    input_option=input(f"What will you do?\n{self.last_option.as_game_str_options()} >> ")
+                    if((player_choice:=poker_enums.ActionType.get_input_option(self.last_option,input_option))!=None):
+                        print(player_choice.game_description(self.player_i))
+                        break
+                    else:
+                        print(f"Invalid option: '{input_option}'. Try again!")
+            else:
+                print(f"Player {self.player_i+1}'s turn. ")
+                computer_prob=poker_enums.hand_rank_choose_probability[self.players_rankings[self.player_i].hand_rank]
+                available_options=self.last_option.get_options()
+                #Redistribute non-used probabilites to other options
+                leftover_prob=sum(v for k,v in computer_prob.items() if k not in available_options)
+                new_computer_prob=[v+leftover_prob/len(available_options) for k,v in computer_prob.items() if k in available_options]
+                new_sum_prob=0
+                for i,v in enumerate(new_computer_prob):
+                    new_computer_prob[i]=v/100+new_sum_prob
+                    new_sum_prob+=v/100
+                rand0to1=random.random()
+                for option,option_p in zip(available_options,new_computer_prob):
+                    if rand0to1<option_p:
+                        player_choice=option
+                        break
+                print(player_choice.game_description(self.player_i))
+            assert(player_choice!=None)
+            if(player_choice==poker_enums.ActionType.Fold):
+                self.players_has_folded[self.player_i]=True
+            self.next_player()
 if __name__ == '__main__':
     while True:
         computers_str=input("You are playing a simulation of Draw Poker.\nHow many computer players will play (1-3)? 0 to exit >> ")
@@ -134,34 +189,5 @@ if __name__ == '__main__':
             break
         else:
             print(f"Invalid string '{computers_str}'")
-    players_hands=[Hand() for _ in range(computers_len+1)]
-    players_rankings:list[RankCmp|None]=[None for _ in range(computers_len+1)]
-    num_players=computers_len+1
-
-    game_loop=True
-    def next_player(player_i:int)->int:
-        return (player_i+1)%num_players
-    while game_loop:
-        last_option=poker_enums.ActionType.Check
-        all_bets_placed=False
-        deck=poker_deck.Deck()
-        deck.shuffle()
-        for i,hand in enumerate(players_hands):
-            hand.draw_from_deck(deck)
-            players_rankings[i]=hand.get_hand_rank()
-        player_i=random.randint(0,computers_len)
-        print(f"Player {player_i+1} will go first")
-        while(True):
-            if(player_i==0):
-                p_ranking=players_rankings[0]
-                hand_print=','.join([ f"[{c.as_game_str()}{s.as_game_str()}]" for c,s in p_ranking.cards ])
-                print(f"It's your turn:\nYour current hand: {hand_print}\nCurrent ranking: {p_ranking.description()}")
-                while(True):
-                    input_option=input(f"What will you do?\n{last_option.as_game_str_options()} >> ")
-                    if((chosen_action:=poker_enums.ActionType.get_input_option(last_option,input_option))!=None):
-                        print(chosen_action.game_description(player_i))
-                    else:
-                        print(f"Invalid option: '{input_option}'. Try again!")
-            else:
-                print(f"Player {player_i+1}'s turn: ")
-            player_i=next_player(player_i)
+    GL=GameLoop(computers_len)
+    GL.do_game_loop()

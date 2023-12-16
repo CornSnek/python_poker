@@ -124,7 +124,25 @@ class ActionType(Enum):
         elif(self==ActionType.Fold):
             option_str=f"Player {player_i+1} has folded their turn"
         return option_str
-        
+def as_probability_weights(list:list[int]):
+    assert(len(ActionType)==5)
+    return {at:p for at,p in zip(ActionType,list)}
+hand_rank_choose_probability:dict[HandRank,dict[ActionType:int]]={
+    #Numbers are probabilities based on ActionType
+    #For Computer AI
+    HandRank.HighCard:as_probability_weights([20,20,10,10,40]),
+    HandRank.Pair:as_probability_weights([20,20,10,10,40]),
+    HandRank.TwoPair:as_probability_weights([15,15,20,20,30]),
+    HandRank.ThreeOfAKind:as_probability_weights([10,10,25,25,30]),
+    HandRank.Straight:as_probability_weights([10,10,30,30,20]),
+    HandRank.Flush:as_probability_weights([10,10,40,25,15]),
+    HandRank.FullHouse:as_probability_weights([5,10,45,30,10]),
+    HandRank.FourOfAKind:as_probability_weights([5,10,45,35,5]),
+    HandRank.StraightFlush:as_probability_weights([5,10,45,35,5]),
+    HandRank.RoyalFlush:as_probability_weights([5,10,45,40,0]),
+}
+for d in hand_rank_choose_probability.values():
+    assert(sum(d.values())==100)
 class poker_enums_test(unittest.TestCase):
     def test_generate_card(self):
         self.assertEqual(generate_card("9S"),(Card.Nine,Suit.Spade))
