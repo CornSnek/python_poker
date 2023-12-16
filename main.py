@@ -11,7 +11,7 @@ class RankCmp:
     def other_cards(self,begin:int)->str:
         return "following the next card(s) in ranking ("+", ".join(Card(v).as_game_str() for v in self.card_rank[begin:])+")"
     def description(self)->str:
-        begin_str=f"{self.hand_rank.as_str_name()}: {Card(self.card_rank[0]).as_game_str()}"
+        begin_str=f"{self.hand_rank.as_game_str()}: {Card(self.card_rank[0]).as_game_str()}"
         if(self.hand_rank==HandRank.HighCard or self.hand_rank==HandRank.Straight):
             return f"{begin_str} as the highest, {self.other_cards(1)}"
         elif(self.hand_rank==HandRank.Pair):
@@ -26,8 +26,6 @@ class RankCmp:
             return f"{begin_str} as the triplet, {Card(self.card_rank[1]).as_game_str()} as the lowest pair, {self.other_cards(2)}"
         elif(self.hand_rank==HandRank.FourOfAKind):
             return f"{begin_str} as the quartet, {self.other_cards(1)}"
-    def as_tuple(self):
-        return (self.hand_rank,self.card_rank,self.cards)
     def __eq__(self,other):
         return self.hand_rank.value==other.hand_rank.value and self.card_rank==other.card_rank
     def __gt__(self,other):
@@ -53,7 +51,7 @@ class Hand:
         return max(self.__get_hand_rank(),self.__get_hand_rank(ace_high=True)) #Check both hands for maximum if Ace is low/high.
     def __get_hand_rank(self,ace_high:bool=False)->RankCmp:
         assert(len(self.__deck_hand)==5)
-        use_hand=self.__deck_hand.copy() #Dont mutate hand
+        use_hand=self.__deck_hand.copy() #Dont mutate deck_hand
         if ace_high:
             for i in range(len(use_hand)):
                 if use_hand[i][0]==poker_enums.Card.AceLow:
@@ -67,7 +65,7 @@ class Hand:
                 rank=HandRank.StraightFlush
             else:
                 rank=HandRank.RoyalFlush
-            number_ranks=[sorted_cv[0]] #Gets number values from highest/lowest rankings
+            number_ranks=[sorted_cv[0]]
         elif highest_window_max==4:
             rank=HandRank.FourOfAKind
             number_ranks=[high_window]
@@ -144,6 +142,7 @@ if __name__ == '__main__':
     def next_player(player_i:int)->int:
         return (player_i+1)%num_players
     while game_loop:
+        last_option=poker_enums.ActionType.Check
         all_bets_placed=False
         deck=poker_deck.Deck()
         deck.shuffle()
@@ -156,8 +155,13 @@ if __name__ == '__main__':
             if(player_i==0):
                 p_ranking=players_rankings[0]
                 hand_print=','.join([ f"[{c.as_game_str()}{s.as_game_str()}]" for c,s in p_ranking.cards ])
-                print(f"It's your turn:\nYour current hand: {hand_print}\nCurrent Hand Ranking: {p_ranking.description()}\n")
-                input("What will you do?\nTODO >> ")
+                print(f"It's your turn:\nYour current hand: {hand_print}\nCurrent ranking: {p_ranking.description()}")
+                while(True):
+                    input_option=input(f"What will you do?\n{last_option.as_game_str_options()} >> ")
+                    if((chosen_action:=poker_enums.ActionType.get_input_option(last_option,input_option))!=None):
+                        print(chosen_action.game_description(player_i))
+                    else:
+                        print(f"Invalid option: '{input_option}'. Try again!")
             else:
                 print(f"Player {player_i+1}'s turn: ")
             player_i=next_player(player_i)

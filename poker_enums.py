@@ -74,17 +74,6 @@ def generate_card(string:str,is_ace_high=False) -> (Card,Suit):
     if is_ace_high and card==Card.AceLow:
         card=Card.AceHigh
     return (card,str_to_suit[string[1]])
-def pascal_case_with_space(str:str):
-    """Get slices of capital words to then place spaces between them"""
-    slices:[(int,int)]=[]
-    slice_begin:int=0
-    for i,ch in enumerate(str):
-        if ch.isupper():
-            slices.append((slice_begin,i))
-            slice_begin=i
-    if len(slices)==0 or slices[-1][0]!=len(str)-1:
-        slices.append((slice_begin,len(str)))
-    return " ".join([str[sl[0]:sl[1]] for sl in slices]).strip()
 class HandRank(Enum):
     HighCard=0
     Pair=1
@@ -96,10 +85,46 @@ class HandRank(Enum):
     FourOfAKind=7
     StraightFlush=8
     RoyalFlush=9
-    def as_str_name(self):
-        return pascal_case_with_space(self.name)
+    def as_game_str(self):
+        return utils.pascal_case_with_space(self.name)
 def max_hand_rank(r1:HandRank,r2:HandRank):
     return r1 if r1.value>r2.value else r2
+class ActionType(Enum):
+    Check=0,
+    Call=1,
+    Bet=2,
+    Raise=3,
+    Fold=4,
+    def get_options(self):
+        assert(self!=ActionType.Fold)
+        if self==ActionType.Check:
+            return [at for at in list(ActionType) if at.value>=ActionType.Check.value and at.value!=ActionType.Call.value]
+        elif self==ActionType.Call:
+            return [at for at in list(ActionType) if at.value>=ActionType.Call.value]
+        elif self==ActionType.Bet or self==ActionType.Raise:
+            return [at for at in list(ActionType) if at.value>=ActionType.Bet.value]
+    def as_game_str_options(self):
+        return ", ".join(["("+o.name[0]+")"+o.name[1:] for o in self.get_options()])
+    def get_input_option(self,chosen:str):
+        """First character"""
+        options=self.get_options()
+        for o in options:
+            first_c=o.name[0]
+            if chosen==first_c:
+                return o
+    def game_description(self,player_i)->str:
+        if(self==ActionType.Check):
+            option_str=f"Player {player_i+1} has checked their turn"
+        elif(self==ActionType.Call):
+            option_str=f"Player {player_i+1} has called their turn, matching the bet from other players"
+        elif(self==ActionType.Bet):
+            option_str=f"Player {player_i+1} has betted their turn, matching the bet from other players"
+        elif(self==ActionType.Raise):
+            option_str=f"Player {player_i+1} has raised the bet their turn, matching the bet from other players"
+        elif(self==ActionType.Fold):
+            option_str=f"Player {player_i+1} has folded their turn"
+        return option_str
+        
 class poker_enums_test(unittest.TestCase):
     def test_generate_card(self):
         self.assertEqual(generate_card("9S"),(Card.Nine,Suit.Spade))
