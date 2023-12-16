@@ -47,6 +47,9 @@ class Hand:
         self.__deck_hand=deck.get_cards(5)
     def put_back_hand(self,deck:poker_deck.Deck):
         deck.put_back_cards(self.__deck_hand)
+    def replace_hand(self,deck:poker_deck.Deck,cards_to_replace:list[int]):
+        for at_i in cards_to_replace:
+            deck.replace_one_card(self.__deck_hand,at_i)
     def get_hand_rank(self)->RankCmp:
         return max(self.__get_hand_rank(),self.__get_hand_rank(ace_high=True)) #Check both hands for maximum if Ace is low/high.
     def __get_hand_rank(self,ace_high:bool=False)->RankCmp:
@@ -133,7 +136,7 @@ class GameLoop:
     def initialize_new_game_loop(self):
         self.players_rankings:list[RankCmp|None]=[None for _ in range(computers_len+1)]
         self.players_option:list[ActionType|None]=[None for _ in range(computers_len+1)]
-        self.winning_player:list[int]=[] #list[int] as they're may be more than 1 player
+        self.winning_players:list[int]=[] #list[int] as they're may be more than 1 player
         self.winning_reason:str=""
         self.last_option=ActionType.Check
         self.deck.shuffle()
@@ -144,7 +147,7 @@ class GameLoop:
         print(f"Player {self.player_i+1} will go first")
     def get_next_player_or_phase(self)->False:
         if self.players_option.count(ActionType.Fold)==self.num_players-1:
-            self.winning_player=[p for p in range(self.num_players) if self.players_option[p]!=ActionType.Fold]
+            self.winning_players=[p for p in range(self.num_players) if self.players_option[p]!=ActionType.Fold]
             self.winning_reason="All other players have folded."
             return False
         while True:
@@ -152,13 +155,20 @@ class GameLoop:
             if(self.players_option[self.player_i]!=ActionType.Fold):
                 return True
     def any_player_has_won(self)->bool:
-        if len(self.winning_player)==0:
+        if len(self.winning_players)==0:
             return False
-        elif len(self.winning_player)==1:
-            print(f"Player #{self.winning_player[0]+1} has won. Reason: {self.winning_reason}")
         else:
-            NotImplementedError("TODO")
-        for p,p_ranking in enumerate(self.players_rankings):
+            player_won_str="Player "
+            player_won_str+=", ".join(str(wp+1) for wp in self.winning_players)
+            print(f"{player_won_str} won. Reason: {self.winning_reason}")
+        players_no_fold=[(p,p_ranking) for p,p_ranking in enumerate(self.players_rankings) if self.players_option[p]!=ActionType.Fold]
+        players_with_fold=[(p,p_ranking) for p,p_ranking in enumerate(self.players_rankings) if self.players_option[p]==ActionType.Fold]
+        print("Players who did not fold:")
+        for p,p_ranking in players_no_fold:
+            hand_print=','.join([ f"[{c.as_game_str()}{s.as_game_str()}]" for c,s in p_ranking.cards ])
+            print(f"Player {p+1}'s hand: {hand_print}\nRanking: {p_ranking.description()}")
+        print("Players who folded:")
+        for p,p_ranking in players_with_fold:
             hand_print=','.join([ f"[{c.as_game_str()}{s.as_game_str()}]" for c,s in p_ranking.cards ])
             print(f"Player {p+1}'s hand: {hand_print}\nRanking: {p_ranking.description()}")
         for hand in self.players_hands:
@@ -170,14 +180,38 @@ class GameLoop:
                 self.game_loop=False
                 break
         return True
+    def put_all_cards_back_in_deck(self):
+        for hand in self.players_hands:
+            hand.put_back_hand(self.deck)
     def do_game_loop(self):
         while self.game_loop:
+            self.deck.check_if_deck_unique()
             self.initialize_new_game_loop()
             self.do_betting_phase()
-            if(self.any_player_has_won()): continue
-            print("TODO: Draw phase")
-            break
+            if(self.any_player_has_won()):
+                self.put_all_cards_back_in_deck()
+                continue
+            self.do_draw_phase()
+            for p,hand in enumerate(self.players_hands): #Get new hand rankings
+                self.players_rankings[p]=hand.get_hand_rank()
+            self.do_betting_phase()
+            if len(self.winning_players)==0:
+                self.winning_reason="Player(s) have the highest ranking cards and did not fold"
+                possible_wins=[(p,pr) for p,pr in enumerate(self.players_rankings) if self.players_option[p]!=ActionType.Fold]
+                assert(len(possible_wins)>=2)
+                max_card:RankCmp=RankCmp(HandRank.MinRank,[],[])
+                for i in range(len(possible_wins)):
+                    pw=possible_wins[i]
+                    if(pw[1]>max_card): #1 winner
+                        self.winning_players=[pw[0]]
+                        max_card=pw[1]
+                    elif(pw[1]==max_card): #Tie may happen
+                        self.winning_players.append(pw[0])
+            self.any_player_has_won()
+            self.put_all_cards_back_in_deck()
     def do_betting_phase(self):
+        players_ok:list[bool]=[False for _ in range(self.num_players)] #See if all players has Checked, Called, or Raised/Betted with Calls
+        check_state_machine:bool=False #False is if all players used Check, True is if all players used Call after a Bet/Raise
         while True:
             player_choice=None
             if(self.player_i==0):
@@ -210,7 +244,28 @@ class GameLoop:
                 print(player_choice.game_description(self.player_i))
             assert(player_choice!=None)
             self.players_option[self.player_i]=player_choice
+            if not check_state_machine:
+                if player_choice==ActionType.Bet:
+                    players_ok=[False for _ in range(self.num_players)]
+                    check_state_machine=True
+            else:
+                if player_choice==ActionType.Raise:
+                    players_ok=[False for _ in range(self.num_players)]
+            players_ok[self.player_i]=True
             if(not self.get_next_player_or_phase()): break
+            new_players_ok=[is_ok for po,is_ok in zip(self.players_option,players_ok) if po!=ActionType.Fold] #Check if true for non Folded players
+            if(all(new_players_ok)): break 
+    def do_draw_phase(self):
+        while True:
+            choice=input("What cards do you want to discard? Format: Comma separated values from 1 to 5. Type nothing to keep all cards. Example 1,2,4 is a valid option. >> ")
+            try:
+                if choice=='': break
+                numbers=[int(s)-1 for s in choice.split(',')]
+                assert(all(0<=n<=4 for n in numbers))
+                self.players_hands[0].replace_hand(self.deck,numbers)
+                break
+            except:
+                print(f"Invalid choice or number/range: '{choice}'. Try again!")
 if __name__ == '__main__':
     while True:
         computers_str=input("You are playing a simulation of Draw Poker.\nHow many computer players will play (1-3)? 0 to exit >> ")

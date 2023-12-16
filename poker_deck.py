@@ -17,14 +17,17 @@ class Deck:
         del self.deck[-much:]
         return return_cards
     def put_back_cards(self,hand):
-        self.deck.extend(hand)
+        self.deck=hand+self.deck
         del hand[:]
+    def replace_one_card(self,hand,at_i):
+        self.deck.insert(0,hand[at_i])
+        hand[at_i]=self.deck.pop()
     def as_sorted_values(hand):
         return sorted([h[0].value for h in hand],reverse=True)
     def check_if_deck_unique(self):
         """This is mostly for error-checking if duplcate cards have accidentally been added back"""
         check_set=set()
-        return not any(i in check_set or check_set.add(i) for i in self.deck)
+        return not any(i in check_set or check_set.add(i) for i in self.deck) and len(self.deck)==52
 class poker_deck_test(unittest.TestCase):
     def test_no_cards_from_get_cards(self):
         deck=Deck()
