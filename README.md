@@ -1,6 +1,8 @@
 # Python Poker Terminal Game Project
 This project is to create a terminal program on python for https://www.codecademy.com as part of my `Portfolio Project: Python Terminal Game` project.
 
+To start the program, type in the shell `python main.py`
+
 One reason was that I wanted to see how the math works in ranking poker hands. I wrote code to determine the hand rankings based on the highest frequency numbered cards (Including the second highest frequency numbered card involving Two Pair or a Full House), or if the hand is a Straight (sequentially numbered cards), or a Flush (all the same suit).
 
 Another reason was to try to make "Computer AI" to replace their cards for better hand rankings,
