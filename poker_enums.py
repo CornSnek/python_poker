@@ -102,7 +102,7 @@ class ActionType(Enum):
         elif self==ActionType.Call:
             return [at for at in list(ActionType) if at.value>=ActionType.Call.value]
         elif self==ActionType.Bet or self==ActionType.Raise:
-            return [at for at in list(ActionType) if at.value>=ActionType.Bet.value]
+            return [at for at in list(ActionType) if at.value>=ActionType.Bet.value or at.value==ActionType.Call.value]
     def as_game_str_options(self):
         return ", ".join(["("+o.name[0]+")"+o.name[1:] for o in self.get_options()])
     def get_input_option(self,chosen:str):
@@ -110,15 +110,15 @@ class ActionType(Enum):
         options=self.get_options()
         for o in options:
             first_c=o.name[0]
-            if chosen==first_c:
+            if chosen.lower()==first_c.lower():
                 return o
     def game_description(self,player_i)->str:
         if(self==ActionType.Check):
             option_str=f"Player {player_i+1} has checked their turn"
         elif(self==ActionType.Call):
-            option_str=f"Player {player_i+1} has called their turn, matching the bet from other players"
+            option_str=f"Player {player_i+1} has called their turn"
         elif(self==ActionType.Bet):
-            option_str=f"Player {player_i+1} has betted their turn, matching the bet from other players"
+            option_str=f"Player {player_i+1} has betted their turn"
         elif(self==ActionType.Raise):
             option_str=f"Player {player_i+1} has raised the bet their turn, matching the bet from other players"
         elif(self==ActionType.Fold):

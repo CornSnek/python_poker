@@ -1,6 +1,6 @@
 import poker_deck
 import poker_enums
-from poker_enums import HandRank,Card
+from poker_enums import HandRank,Card,ActionType
 import random
 CardTuple=(poker_enums.Card,poker_enums.Suit)
 class RankCmp:
@@ -128,23 +128,55 @@ class GameLoop:
     def __init__(self,computers_len):
         self.deck=poker_deck.Deck()
         self.players_hands=[Hand() for _ in range(computers_len+1)]
-        self.players_rankings:list[RankCmp|None]=[Hand() for _ in range(computers_len+1)]
-        self.players_has_folded:list[bool]=[False for _ in range(computers_len+1)]
         self.num_players=computers_len+1
         self.game_loop=True
-    def next_player(self):
-        self.player_i=(self.player_i+1)%self.num_players
+    def initialize_new_game_loop(self):
+        self.players_rankings:list[RankCmp|None]=[None for _ in range(computers_len+1)]
+        self.players_option:list[ActionType|None]=[None for _ in range(computers_len+1)]
+        self.winning_player:list[int]=[] #list[int] as they're may be more than 1 player
+        self.winning_reason:str=""
+        self.last_option=ActionType.Check
+        self.deck.shuffle()
+        for i,hand in enumerate(self.players_hands):
+            hand.draw_from_deck(self.deck)
+            self.players_rankings[i]=hand.get_hand_rank()
+        self.player_i=random.randint(0,computers_len)
+        print(f"Player {self.player_i+1} will go first")
+    def get_next_player_or_phase(self)->False:
+        if self.players_option.count(ActionType.Fold)==3:
+            self.winning_player=[p for p in range(self.num_players) if self.players_option[p]!=ActionType.Fold]
+            self.winning_reason="All other players have folded."
+            return False
+        while True:
+            self.player_i=(self.player_i+1)%self.num_players
+            if(self.players_option[self.player_i]!=ActionType.Fold):
+                return True
+    def any_player_has_won(self)->bool:
+        if len(self.winning_player)==0:
+            return False
+        elif len(self.winning_player)==1:
+            print(f"Player #{self.winning_player[0]+1} has won. Reason: {self.winning_reason}")
+        else:
+            NotImplementedError("TODO")
+        for p,p_ranking in enumerate(self.players_rankings):
+            hand_print=','.join([ f"[{c.as_game_str()}{s.as_game_str()}]" for c,s in p_ranking.cards ])
+            print(f"Player {p+1}'s hand: {hand_print}\nRanking: {p_ranking.description()}")
+        for hand in self.players_hands:
+            hand.put_back_hand(self.deck)
+        while True:
+            if((inp:=input("Play again? Y/N or y/n >> ")).lower()=="y"):
+                break
+            elif(inp.lower()=="n"):
+                self.game_loop=False
+                break
+        return True
     def do_game_loop(self):
         while self.game_loop:
-            self.last_option=poker_enums.ActionType.Check
-            self.all_bets_placed=False
-            self.deck.shuffle()
-            self.player_i=random.randint(0,computers_len)
-            print(f"Player {self.player_i+1} will go first")
-            for i,hand in enumerate(self.players_hands):
-                hand.draw_from_deck(self.deck)
-                self.players_rankings[i]=hand.get_hand_rank()
+            self.initialize_new_game_loop()
             self.do_betting_phase()
+            if(self.any_player_has_won()): continue
+            print("TODO: Draw phase")
+            break
     def do_betting_phase(self):
         while True:
             player_choice=None
@@ -154,13 +186,13 @@ class GameLoop:
                 print(f"It's your turn:\nYour current hand: {hand_print}\nCurrent ranking: {p_ranking.description()}")
                 while(True):
                     input_option=input(f"What will you do?\n{self.last_option.as_game_str_options()} >> ")
-                    if((player_choice:=poker_enums.ActionType.get_input_option(self.last_option,input_option))!=None):
+                    if((player_choice:=ActionType.get_input_option(self.last_option,input_option))!=None):
                         print(player_choice.game_description(self.player_i))
                         break
                     else:
                         print(f"Invalid option: '{input_option}'. Try again!")
             else:
-                print(f"Player {self.player_i+1}'s turn. ")
+                print(f"It's player {self.player_i+1}'s turn.")
                 computer_prob=poker_enums.hand_rank_choose_probability[self.players_rankings[self.player_i].hand_rank]
                 available_options=self.last_option.get_options()
                 #Redistribute non-used probabilites to other options
@@ -177,9 +209,8 @@ class GameLoop:
                         break
                 print(player_choice.game_description(self.player_i))
             assert(player_choice!=None)
-            if(player_choice==poker_enums.ActionType.Fold):
-                self.players_has_folded[self.player_i]=True
-            self.next_player()
+            self.players_option[self.player_i]=player_choice
+            if(not self.get_next_player_or_phase()): break
 if __name__ == '__main__':
     while True:
         computers_str=input("You are playing a simulation of Draw Poker.\nHow many computer players will play (1-3)? 0 to exit >> ")
