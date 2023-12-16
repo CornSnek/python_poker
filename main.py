@@ -42,6 +42,8 @@ class Hand:
     def _set_deck_hand(self,cards:list[CardTuple]):
         """Used for testing purposes"""
         self.__deck_hand=cards
+    def deck_hand(self):
+        return self.__deck_hand.copy()
     def draw_from_deck(self,deck:poker_deck.Deck):
         assert(len(self.__deck_hand)!=5)
         self.__deck_hand=deck.get_cards(5)
@@ -260,7 +262,8 @@ class GameLoop:
             if(all(new_players_ok)): break 
     def do_draw_phase(self):
         while True:
-            choice=input("What cards do you want to discard? Format: Comma separated values from 1 to 5. Type nothing to keep all cards. Example 1,2,4 is a valid option. >> ")
+            if self.players_option[0]==ActionType.Fold: break
+            choice=input("What cards do you want to discard? Format: Comma separated values from 1 to 5. Type nothing to keep all cards.\nExample: 1,2,4 is a valid option. >> ")
             try:
                 if choice=='': break
                 numbers=[int(s)-1 for s in choice.split(',')]
@@ -268,11 +271,45 @@ class GameLoop:
                 self.players_hands[0].replace_hand(self.deck,numbers)
                 break
             except:
-                print(f"Invalid choice or number/range: '{choice}'. Try again!")
+                print(f"Invalid choice(s) or number(s)/range: '{choice}'. Try again!")
+        for computer_p in range(1,self.num_players):
+            if self.players_option[computer_p]==ActionType.Fold: continue
+            hand=self.players_rankings[computer_p].cards.copy()
+            rand0to1=random.random()
+            if rand0to1>0.5:
+                count_suits:dict[poker_enums.Suit:(list[int],int)]={}
+                for i,(_,s) in enumerate(hand):
+                    entry=count_suits.get(s,([],0))
+                    entry[0].append(i)
+                    count_suits[s]=(entry[0],entry[1]+1)
+                for i_list,f in count_suits.values():
+                    if f==3: #Computer player tries to get a flush
+                        print(f"Player {computer_p+1} has replaced 2 card(s)")
+                        self.players_hands[computer_p].replace_hand(self.deck,[i for i in list(range(5)) if i not in i_list])
+            else:
+                count_cards:dict[poker_enums.Card:(list[int],int)]={}
+                for i,(c,_) in enumerate(hand):
+                    entry=count_cards.get(c,([],0))
+                    entry[0].append(i)
+                    count_cards[c]=(entry[0],entry[1]+1)
+                i_list_append=[]
+                append_count=0
+                for i_list,f in count_cards.values():
+                    if f==2 or f==3:
+                        i_list_append.extend(i_list)
+                        append_count+=1
+                if(append_count==2): #Computer player tries to keep Full House, or replaces 1 card from a pair to get a full house.
+                    if len(i_list_append)==0: continue
+                    print(f"Player {computer_p+1} has replaced {5-len(i_list_append)} card(s)")
+                    self.players_hands[computer_p].replace_hand(self.deck,[i for i in list(range(5)) if i not in i_list_append])
+                for i_list,f in count_cards.values():
+                    if f>=3: #Computer player tries to get Three/FourOfAKind
+                        print(f"Player {computer_p+1} has replaced {5-len(i_list)} card(s)")
+                        self.players_hands[computer_p].replace_hand(self.deck,[i for i in list(range(5)) if i not in i_list])
 if __name__ == '__main__':
     while True:
-        computers_str=input("You are playing a simulation of Draw Poker.\nHow many computer players will play (1-3)? 0 to exit >> ")
-        if(len(computers_str)==1 and '0'<=computers_str<='3'):
+        computers_str=input("You are playing a simulation of Draw Poker.\nHow many computer players will play (1-7)? 0 to exit >> ")
+        if(len(computers_str)==1 and '0'<=computers_str<='7'):
             if(computers_str=='0'): exit()
             computers_len=int(computers_str)
             break
