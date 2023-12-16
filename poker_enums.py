@@ -101,8 +101,10 @@ class ActionType(Enum):
             return [at for at in list(ActionType) if at.value>=ActionType.Check.value and at.value!=ActionType.Call.value]
         elif self==ActionType.Call:
             return [at for at in list(ActionType) if at.value>=ActionType.Call.value]
-        elif self==ActionType.Bet or self==ActionType.Raise:
-            return [at for at in list(ActionType) if at.value>=ActionType.Bet.value or at.value==ActionType.Call.value]
+        elif self==ActionType.Bet:
+            return [at for at in list(ActionType) if at.value>ActionType.Bet.value or at.value==ActionType.Call.value]
+        elif self==ActionType.Raise:
+            return [at for at in list(ActionType) if at.value>=ActionType.Raise.value or at.value==ActionType.Call.value]
     def as_game_str_options(self):
         return ", ".join(["("+o.name[0]+")"+o.name[1:] for o in self.get_options()])
     def get_input_option(self,chosen:str):

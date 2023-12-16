@@ -143,7 +143,7 @@ class GameLoop:
         self.player_i=random.randint(0,computers_len)
         print(f"Player {self.player_i+1} will go first")
     def get_next_player_or_phase(self)->False:
-        if self.players_option.count(ActionType.Fold)==3:
+        if self.players_option.count(ActionType.Fold)==self.num_players-1:
             self.winning_player=[p for p in range(self.num_players) if self.players_option[p]!=ActionType.Fold]
             self.winning_reason="All other players have folded."
             return False
