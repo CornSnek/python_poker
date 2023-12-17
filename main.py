@@ -283,8 +283,8 @@ class GameLoop:
                     entry[0].append(i)
                     count_suits[s]=(entry[0],entry[1]+1)
                 for i_list,f in count_suits.values():
-                    if f==3: #Computer player tries to get a flush
-                        print(f"Player {computer_p+1} has replaced 2 card(s)")
+                    if f==3 or f==4: #Computer player tries to get a flush
+                        print(f"Player {computer_p+1} has replaced {5-len(i_list)} card(s)")
                         self.players_hands[computer_p].replace_hand(self.deck,[i for i in list(range(5)) if i not in i_list])
             else:
                 count_cards:dict[poker_enums.Card:(list[int],int)]={}
